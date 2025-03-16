@@ -1,52 +1,68 @@
 import streamlit as st
 import tensorflow as tf
 import numpy as np
+import pickle
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
-# Load the model (replace with your actual .h5 file path)
+
+# Load the trained model
 model = tf.keras.models.load_model("../modeling/artifacts/best_model.h5")
 
-# Function to process the input text
-def preprocess_text(text, type_value):
-    # Example: You can modify this to match your model's input preprocessing
-    # For example, converting text to lowercase, tokenizing, etc.
-    text_input = np.array([text.lower()])  # Example preprocessing (change as needed)
-    
-    # You can include the 'type' in preprocessing if necessary
-    type_input = np.array([type_value])  # Assuming type_value is numerical or needs to be encoded
-    
-    return text_input, type_input
+# Load the tokenizer
+with open("../modeling/artifacts/tokenizer.pkl", "rb") as handle:
+    tokenizer = pickle.load(handle)
 
-# Function to generate predictions
+# Define fixed categories for 'type'
+type_options = ["Change", "Incident", "Problem", "Request"]
+
+# Define hardcoded label mapping for encoded results
+priority_mapping = {0: "High", 1: "Low", 2: "Medium"}
+
+# Constants
+MAX_LENGTH = 512  
+
+# Function to preprocess text input
+def preprocess_text(text):
+    sequence = tokenizer.texts_to_sequences([text])
+    padded_sequence = pad_sequences(sequence, maxlen=MAX_LENGTH, padding='post', truncating='post')
+    return padded_sequence
+
+# Function to preprocess categorical input (type)
+def preprocess_type(selected_type):
+    mapping = {val: idx for idx, val in enumerate(type_options)}
+    return np.array([[mapping[selected_type]]])
+
+# Function to make predictions
 def generate_prediction(text_input, type_input):
-    # Make the prediction using the loaded model
-    prediction = model.predict([text_input, type_input])  # Adjust this line according to your model's input
-    return prediction
+    # Combine text sequence and categorical feature
+    features_combined = np.concatenate([text_input, type_input], axis=1)
+    prediction = model.predict(features_combined)
+    
+    # priority prediction (0 = High, 1 = Low, 2 = Medium)
+    predicted_priority = np.argmax(prediction, axis=1)[0]  # Get the predicted priority label (0, 1, 2)
+    
+    # Map the predicted priority to human-readable label
+    return priority_mapping[predicted_priority]
 
-# Streamlit UI elements
+# Simple UI 
 st.title("Resolve AI")
-st.write("Enter your request and select a type to get a priority prediction.")
+st.write("Enter your request and select a type to generate a prediction.")
 
-# Free form text input
+# User input fields (the two features the model was trained on)
 user_input = st.text_area("Enter your text:", "")
-
-# Dropdown for selecting "type"
-type_options =  ['Change' 'Incident' 'Problem' 'Request'] # Modify as per your options
 type_selection = st.selectbox("Select type:", type_options)
 
-# Convert type selection to a numerical value (or however you want to encode it)
-type_mapping = {type_options[i]: i for i in range(len(type_options))}
-type_value = type_mapping[type_selection]
-
-# Prediction button
+# Prediction UI functionality
 if st.button("Generate Prediction"):
     if user_input:
-        # Preprocess input and type
-        text_input, type_input = preprocess_text(user_input, type_value)
-        
+        # Preprocess inputs
+        text_input = preprocess_text(user_input)
+        type_input = preprocess_type(type_selection)
+
         # Get prediction
-        prediction = generate_prediction(text_input, type_input)
-        
-        # Display result (you can modify how the prediction is displayed)
-        st.write("Prediction result: ", prediction)
+        predicted_priority = generate_prediction(text_input, type_input)
+
+        # Display result
+        st.write(f"Predicted priority: {predicted_priority}")
     else:
         st.error("Please enter some text!")
