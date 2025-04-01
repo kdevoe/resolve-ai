@@ -15,17 +15,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load the trained model
-model = tf.keras.models.load_model("../modeling/artifacts/best_model.h5")
+model = tf.keras.models.load_model("../modeling/artifacts/best_binary_model_after_tuning.h5")
 
 # Load the tokenizer
-with open("../modeling/artifacts/tokenizer.pkl", "rb") as handle:
+with open("../modeling/artifacts/binary_tokenizer.pkl", "rb") as handle:
     tokenizer = pickle.load(handle)
 
 # Define fixed categories for 'type'
 type_options = ["Change", "Incident", "Problem", "Request"]
 
 # Define hardcoded label mapping for encoded results
-priority_mapping = {0: "High", 1: "Low", 2: "Medium"}
+priority_mapping = {0: "Low", 1: "Med/High"}
 
 # Constants
 MAX_LENGTH = 512  
@@ -77,23 +77,34 @@ if st.button("Generate Prediction"):
         
         st.write(f"Predicted priority: {predicted_priority}")
         
-        if predicted_priority in ["Medium", "High"]:
+        if predicted_priority == "Med/High":
             st.warning("This issue may require human intervention. Please contact support.")
         else:
             st.subheader("Chat Assistance")
+            
+            # Ensure messages persist across reruns
             if "messages" not in st.session_state:
                 st.session_state.messages = []
-            
+
+            # Display previous chat messages
             for message in st.session_state.messages:
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
-            
-            if prompt := st.chat_input("How can I assist you further?"):
-                st.session_state.messages.append({"role": "user", "content": prompt})
+
+            # Accept user input for chat
+            prompt = st.chat_input("How can I assist you further?")
+            if prompt:
                 with st.chat_message("user"):
                     st.markdown(prompt)
+                
+                # Get response
+                response = response_generator(prompt)
+
                 with st.chat_message("assistant"):
-                    response = st.write_stream(response_generator(prompt))
+                    st.markdown(response)
+                
+                # Store in session state
+                st.session_state.messages.append({"role": "user", "content": prompt})
                 st.session_state.messages.append({"role": "assistant", "content": response})
     else:
         st.error("Please enter some text!")
