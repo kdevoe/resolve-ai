@@ -23,8 +23,11 @@ ResolveAI incorporates multiple AI-driven components designed to optimize ticket
 
 ### System Architecture
 1️⃣ Data Ingestion – Tickets are sourced from structured datasets or live systems (e.g., Jira, ServiceNow).
+
 2️⃣ Vector Storage & Retrieval – ChromaDB/FAISS stores past resolutions for quick lookup.
+
 3️⃣ Priority Classification – A Bidirectional LSTM model predicts ticket urgency/priority.
+
 4️⃣ AI-Powered Response Generation – An LLM (combined with RAG) crafts intelligent responses for low priority tickets.
 
 <!-- Installation and Running the Project -->
