@@ -60,7 +60,9 @@ ResolveAI incorporates multiple AI-driven components designed to optimize ticket
 
 ### 🛠️ Contribution Guidelines
 ✔️ Code Style: Follow PEP8 (for Python) and best practices.
+
 ✔️ Documentation: Update README or relevant docs if needed.
+
 ✔️ Discussions: Use GitHub Issues for bug reports and feature requests.
 
 ### ❓ Need Help?
