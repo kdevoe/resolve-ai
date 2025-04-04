@@ -1,0 +1,17 @@
+[project]
+name = "resolveai"
+version = "0.1.0"
+description = "An AI-powered help desk system that classifies ticket priority using deep learning and intelligently routes low-priority requests to an LLM for automated resolution, reducing human intervention."
+authors = [
+    {name = "Arin DeLoatch"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit (>=1.43.2,<2.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
