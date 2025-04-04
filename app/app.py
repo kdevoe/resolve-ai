@@ -1,22 +1,31 @@
 import streamlit as st
 import tensorflow as tf
-import numpy as np
 import pickle
+import numpy as np
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+import os
+import time
+from langchain.vectorstores import Chroma
+from openai import OpenAI
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import RetrievalQA
+from langchain.embeddings.openai import OpenAIEmbeddings
+from dotenv import load_dotenv
 
+load_dotenv()
 
 # Load the trained model
-model = tf.keras.models.load_model("../modeling/artifacts/best_model.h5")
+model = tf.keras.models.load_model("../modeling/artifacts/best_binary_model_after_tuning.h5")
 
 # Load the tokenizer
-with open("../modeling/artifacts/tokenizer.pkl", "rb") as handle:
+with open("../modeling/artifacts/binary_tokenizer.pkl", "rb") as handle:
     tokenizer = pickle.load(handle)
 
 # Define fixed categories for 'type'
 type_options = ["Change", "Incident", "Problem", "Request"]
 
 # Define hardcoded label mapping for encoded results
-priority_mapping = {0: "High", 1: "Low", 2: "Medium"}
+priority_mapping = {0: "Low", 1: "Med/High"}
 
 # Constants
 MAX_LENGTH = 512  
@@ -34,35 +43,42 @@ def preprocess_type(selected_type):
 
 # Function to make predictions
 def generate_prediction(text_input, type_input):
-    # Combine text sequence and categorical feature
     features_combined = np.concatenate([text_input, type_input], axis=1)
     prediction = model.predict(features_combined)
-    
-    # priority prediction (0 = High, 1 = Low, 2 = Medium)
     predicted_priority = np.argmax(prediction, axis=1)[0]  # Get the predicted priority label (0, 1, 2)
-    
-    # Map the predicted priority to human-readable label
     return priority_mapping[predicted_priority]
 
-# Simple UI 
+# OpenAI setup
+openai_api_key = os.getenv("OPENAI_API_KEY")
+embedding = OpenAIEmbeddings(openai_api_key=openai_api_key)
+persist_directory = './chroma_db'
+vectordb = Chroma(persist_directory=persist_directory, embedding_function=embedding)
+llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, openai_api_key=openai_api_key)
+qa_chain = RetrievalQA.from_chain_type(llm, retriever=vectordb.as_retriever())
+
+def response_generator(prompt):
+    response = qa_chain({"query": prompt})['result']   
+    for word in response.split():
+        yield word + " "
+        time.sleep(0.05)
+
+# Streamlit UI
 st.title("Resolve AI")
 st.write("Enter your request and select a type to generate a prediction.")
 
-# User input fields (the two features the model was trained on)
 user_input = st.text_area("Enter your text:", "")
 type_selection = st.selectbox("Select type:", type_options)
 
-# Prediction UI functionality
 if st.button("Generate Prediction"):
     if user_input:
-        # Preprocess inputs
         text_input = preprocess_text(user_input)
         type_input = preprocess_type(type_selection)
-
-        # Get prediction
         predicted_priority = generate_prediction(text_input, type_input)
-
-        # Display result
+        
         st.write(f"Predicted priority: {predicted_priority}")
-    else:
-        st.error("Please enter some text!")
+        
+        if predicted_priority == "Med/High":
+            st.warning("This issue may require human intervention. Please contact support.")
+        else:
+           chatbot_link = 'https://huggingface.co/spaces/kdevoe/TechSupportChatbot'
+           st.write('Please chat with our [assistant](%s) for further resolution'% chatbot_link)
