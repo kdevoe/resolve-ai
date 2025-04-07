@@ -22,6 +22,7 @@ ResolveAI incorporates multiple AI-driven components designed to optimize ticket
 ![ResolveAI Architecture](./diagrams/resolve-ai-architecture.png)
 
 ### System Architecture
+![ResolveAI system_architecture](./diagrams/ResolveAI-system-architecture.jpg)
 1️⃣ Data Ingestion – Tickets are sourced from structured datasets or live systems (e.g., Jira, ServiceNow).
 
 2️⃣ Vector Storage & Retrieval – ChromaDB/FAISS stores past resolutions for quick lookup.
