@@ -44,23 +44,9 @@ def preprocess_type(selected_type):
 # Function to make predictions
 def generate_prediction(text_input, type_input):
     features_combined = np.concatenate([text_input, type_input], axis=1)
-    prediction = model.predict(features_combined)
-    predicted_priority = np.argmax(prediction, axis=1)[0]  # Get the predicted priority label (0, 1, 2)
-    return priority_mapping[predicted_priority]
-
-# OpenAI setup
-openai_api_key = os.getenv("OPENAI_API_KEY")
-embedding = OpenAIEmbeddings(openai_api_key=openai_api_key)
-persist_directory = './chroma_db'
-vectordb = Chroma(persist_directory=persist_directory, embedding_function=embedding)
-llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, openai_api_key=openai_api_key)
-qa_chain = RetrievalQA.from_chain_type(llm, retriever=vectordb.as_retriever())
-
-def response_generator(prompt):
-    response = qa_chain({"query": prompt})['result']   
-    for word in response.split():
-        yield word + " "
-        time.sleep(0.05)
+    prediction = model.predict(features_combined)[0][0]  # Get the probability
+    predicted_label = int(prediction > 0.5)  # Convert to 0 or 1
+    return priority_mapping[predicted_label]
 
 # Streamlit UI
 st.title("Resolve AI")
