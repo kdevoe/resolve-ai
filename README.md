@@ -41,7 +41,7 @@ ResolveAI incorporates multiple AI-driven components designed to optimize ticket
 ### Installation
 1. Clone the repository
    ```
-   git clone https://github.com/kdevoe/AAI590_Customer_Support.git
+   git clone https://github.com/kdevoe/resolve-ai.git
     ```
    
 2. Ensure the necessary packages are installed via your package manager (poetry, pip, anaconda,etc.) and import the modules into your python/notebook file. 
