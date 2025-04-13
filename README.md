@@ -2,6 +2,10 @@
 
 ResolveAI is an AI-powered solution designed to enhance IT help desk and customer support ticket resolution by leveraging Retrieval-Augmented Generation (RAG) and deep learning-based classification. It streamlines the ticket-handling process by automating responses, reducing redundancy, and improving resolution times
 
+Access the [classification application](https://huggingface.co/spaces/kdevoe/ResolveAIClassifier) on HuggingFace Spaces.
+
+Access the [LLM/RAG application](https://huggingface.co/spaces/kdevoe/ResolveAI) HuggingFace Spaces.
+
 ## Key Features
 
 ✔️ Smart Ticket Retrieval – Uses a vector store (e.g., ChromaDB, FAISS) to retrieve relevant past resolutions.
@@ -51,12 +55,14 @@ ResolveAI incorporates multiple AI-driven components designed to optimize ticket
    poetry install 
      ```
 <!-- Installation and Running the Web App -->
-### Running the web application
+### Running the web application/chatbot
 
 1. Start the application with Streamlit:
    ```
    cd app
    streamlit run app.py
+   # OR (for LLM component)
+   streamlit run app-llm.py
     ```
 
 ### 🛠️ Contribution Guidelines
